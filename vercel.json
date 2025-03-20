@@ -1,0 +1,19 @@
+{
+    "version": 2,
+    "builds": [
+      {
+        "src": "next.config.js",
+        "use": "@vercel/next"
+      }
+    ],
+    "routes": [
+      {
+        "src": "/api/(.*)",
+        "dest": "/api/$1"
+      }
+    ],
+    "env": {
+      "NEXT_PUBLIC_API_URL": "api/generate",
+      "ANOTHER_ENV_VARIABLE": "process.env.GEMINI_API_KEY"
+    }
+}
