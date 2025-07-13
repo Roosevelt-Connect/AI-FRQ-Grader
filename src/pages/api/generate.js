@@ -1,3 +1,4 @@
+// filepath: /Users/dev/Documents/GitHub/AI-FRQ-Grader/src/pages/api/generate.js
 import { model, generationConfig } from '../../../lib/api';
 
 export default async function handler(req, res) {
@@ -18,6 +19,6 @@ export default async function handler(req, res) {
         res.status(200).json({ response: responseText });
     } catch (error) {
         console.error('Error during chat session:', error);
-        res.status(500).json({ message: 'Internal server error' });
+        res.status(500).json({ message: 'Internal server error', error: error.message });
     }
 }
