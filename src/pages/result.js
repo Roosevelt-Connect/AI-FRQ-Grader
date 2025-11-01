@@ -18,6 +18,12 @@ const ResultPage = () => {
     const handleHomeButtonClick = () => {
         router.push('/'); // Navigate to the home page
     };
+    
+    const [isPopupOpen, setIsPopupOpen] = useState(false);
+    
+    const togglePopup = () => {
+        setIsPopupOpen(!isPopupOpen);
+    };
 
     return (
         <div className="container">
@@ -27,11 +33,49 @@ const ResultPage = () => {
                 <ul>
                 <li>
                     <button
-                        className="home-button"
+                        className="sidebar-button"
                         onClick={handleHomeButtonClick}  // On click, navigate to home
                     >
                         Home
                     </button>
+                </li>
+                <li>
+                    <button
+                        className="sidebar-button"
+                        // onClick={handleHomeButtonClick}  // On click, navigate to home
+                        onClick={togglePopup}
+                    >
+                        Retry
+                    </button>
+
+                    {isPopupOpen && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    zIndex: 999
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                        textAlign: 'center'
+                    }}>
+                        <h2 className="text-gray-800">Grading...</h2>
+                        <p className="text-gray-800">This may take some time,</p>
+                        <p className="text-gray-800">so get some cookies!</p>
+                        <p></p>
+                    </div>
+                </div>
+            )}
+
                 </li>
                 </ul>
             </aside>
@@ -57,15 +101,15 @@ const ResultPage = () => {
                 .container {
                     display: flex;
                     height: 100vh;
-                    background: radial-gradient(circle, #2d2e32, #1c1c1f);
-                    color: white;
+                    background: radial-gradient(circle, #ffffff, #fff1ff);
+                    color: #333;
                     overflow: hidden;
                 }
 
                 /* Sidebar Styling */
                 .sidebar {
                     width: 200px;
-                    background: rgba(40, 40, 45, 0.9);
+                    background: rgba(255, 255, 255, 0.4);
                     padding: 10px;
                     display: flex;
                     flex-direction: column;
@@ -83,7 +127,7 @@ const ResultPage = () => {
                 .toggle-button {
                     font-size: 2rem;
                     margin-bottom: 20px;
-                    color: #fff;
+                    color: #333;
                     cursor: pointer;
                     transition: transform 0.2s ease-in-out;
                     align-self: center;
@@ -110,7 +154,7 @@ const ResultPage = () => {
                 }
 
                 .sidebar li:hover {
-                    background: rgba(255, 255, 255, 0.1);
+                    background: rgba(0, 0, 0, 0.05);
                     transform: scale(1.05);
                 }
 
@@ -128,12 +172,12 @@ const ResultPage = () => {
                     display: none;
                 }
 
-                /* Home Button - Styled like other Sidebar Items */
-                .home-button {
+                /* Sidebar Button - Styled like other Sidebar Items */
+                .sidebar-button {
                     font-size: 1.2rem;
                     padding: 12px;
                     background: transparent;
-                    color: white;
+                    color: #333;
                     border: none;
                     cursor: pointer;
                     text-align: left;
@@ -142,13 +186,13 @@ const ResultPage = () => {
                     transition: background 0.3s, transform 0.2s ease-in-out;
                 }
 
-                /* Hide the Home Button when Sidebar is closed */
-                .sidebar.closed .home-button {
+                /* Hide the Sidebar Button when Sidebar is closed */
+                .sidebar.closed .sidebar-button {
                     display: none;
                 }
 
-                /* Hover effect for Home Button */
-                .home-button:hover {
+                /* Hover effect for Sidebar Button */
+                .sidebar-button:hover {
                     background: rgba(255, 255, 255, 0.1);
                     transform: scale(1.05);
                 }
@@ -196,7 +240,7 @@ const ResultPage = () => {
                     text-align: left;
                     backdrop-filter: blur(10px);
                     box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
-                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    border: 1px solid rgba(0, 0, 0, 0.2);
                     white-space: normal;
                     overflow-wrap: break-word;
                     margin: 0 auto; /* Keeps it centered */

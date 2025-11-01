@@ -5,177 +5,212 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 
 async function run({ input, router }) {
-    try {
-        const response = await fetch('/api/generate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ prompt: `Grade this APUSH DBQ: ${input}` }),
-        });
+  try {
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: `Grade this APUSH DBQ: ${input}` }),
+    });
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
+    if (!response.ok) throw new Error('Network response was not ok');
 
-        const data = await response.json();
-        const responseText = data.response;
-
-        const path = `/result?response=${encodeURIComponent(responseText)}`; // Pass responseText as a query parameter
-        console.log('Navigating to path:', path);
-        console.log('Router: ' + router);
-        router.push(path);
-    } catch (error) {
-        console.error('Error during chat session:', error);
-    }
+    const data = await response.json();
+    router.push(`/result?response=${encodeURIComponent(data.response)}`);
+  } catch (error) {
+    console.error('Error during chat session:', error);
+  }
 }
 
 export default function Home() {
   const router = useRouter();
   const [blocks, setBlocks] = useState([]);
   const [input, setInput] = useState("");
-  const gridSize = 32; // Grid dimensions (odd number for symmetry)
-  const center = Math.floor(gridSize / 2); // Center index of the grid
-  const scales = Array.from({ length: gridSize * gridSize }, (_, i) => i); // Total blocks
-  const numberOfBlocks = 20;
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+
+  const [showPieces, setShowPieces] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [erasePieces, setErasePieces] = useState(false);
+
+  const numberOfBlocks = 25;
 
   useEffect(() => {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
 
-    // Define two color gradients
     const gradients = [
-      "bg-gradient-to-br from-purple-400 to-purple-600", // Purple gradient
-      "bg-gradient-to-br from-yellow-500 to-yellow-600", // Yellow gradient
+      "bg-gradient-to-br from-purple-400 to-purple-600",
+      "bg-gradient-to-br from-yellow-400 to-yellow-600",
+      "bg-gradient-to-br from-pink-400 to-red-500"
     ];
 
     const initialBlocks = Array.from({ length: numberOfBlocks }).map(() => {
-      // Randomly choose a gradient
       const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
-
       return {
         top: Math.random() * windowHeight - 75,
         left: Math.random() * windowWidth - 75,
-        size: Math.random() * 50 + 20, // Random size between 20px and 70px
-        delay: Math.random() * 3, // Random animation delay (0-3 seconds)
-        gradient: randomGradient, // Assigned random gradient
+        size: Math.random() * 60 + 20,
+        delay: Math.random() * 3,
+        gradient: randomGradient,
       };
     });
 
     setBlocks(initialBlocks);
-  }, []); // Empty dependency array ensures this runs only once
+  }, []);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsPopupOpen(true);
     await run({ input, router });
   };
 
-  const handleTOS = () => {
-    router.push('/tos'); // Navigate to the home page
+  const togglePopup = () => setIsPopupOpen(!isPopupOpen);
+  const handleTOS = () => router.push('/tos');
+
+  // Puzzle rectangle bounds
+  const puzzleBounds = {
+    top: '10%',
+    left: '25%',
+    width: '50%',
+    height: '70%',
+  };
+
+  const pieces = [
+    { name: 'top-left', initial: { x: -500, y: -300 }, style: { top: puzzleBounds.top, left: puzzleBounds.left, width: '25%', height: '35%' }, delay: 0 },
+    { name: 'top-right', initial: { x: 500, y: -300 }, style: { top: puzzleBounds.top, left: '50%', width: '25%', height: '35%' }, delay: 0.2 },
+    { name: 'bottom-left', initial: { x: -500, y: 300 }, style: { top: '45%', left: puzzleBounds.left, width: '25%', height: '35%' }, delay: 0.4 },
+    { name: 'bottom-right', initial: { x: 500, y: 300 }, style: { top: '45%', left: '50%', width: '25%', height: '35%' }, delay: 0.6 },
+  ];
+
+  const handlePiecesComplete = () => {
+    // Trigger the diagonal corner wipe
+    setErasePieces(true);
+    setTimeout(() => {
+      setShowPieces(false); // remove pieces after wipe
+      setShowForm(true);    // show form with opposite wipe
+    }, 700); // duration of wipe
   };
 
   return (
-    <div className="flex flex-col items-center bg-gradient-to-br from-white to-purple-100 min-h-screen">
-      {/* Hero Section */}
-      <motion.main
-        className="flex flex-col items-center text-center pt-4 px-8 z-20"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1, delay: 2}}
-      >
-        {/* Random blocks */}
-          <div className="z=10">
-            {blocks.map((block, index) => (
-              <motion.div
-                key={index}
-                className={`absolute ${block.gradient} rounded-lg shadow-lg`}
-                style={{
-                  top: `${block.top}px`,
-                  left: `${block.left}px`,
-                  width: `${block.size}px`,
-                  height: `${block.size}px`,
-                }}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: [0, 1, 1.2, 1], opacity: [0, 0.25, 0.25, 0.05] }}
-                transition={{
-                  duration: 15, // Duration of the animation
-                  delay: block.delay, // Unique delay for each block
-                  repeat: Infinity, // Infinite looping
-                  repeatType: "reverse", // Reverse the animation on loop
-                }}
-              ></motion.div>
-            ))}
-          </div>
-          {/* Title with Gradient */}
-          <h1 className="text-9xl font-serif font-bold pb-6 bg-gradient-to-r from-yellow-600 to-purple-600 text-transparent bg-clip-text drop-shadow-lg transition transform hover:scale-105">
-              Intelligrader
-          </h1>
-          {/* Subtitle */}
-          <h2 className="text-3xl font-serif font-semibold text-black mb-12 transition transform hover:scale-105">
-              The APUSH DBQ Grader
-          </h2>
+    <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-white to-purple-50 overflow-hidden">
 
-          {/* Input Fields */}
-          <div className="grid grid-cols-1 gap-10 w-full max-w-2xl">
-            {/* Text Box */}
-            <div>
-              <form onSubmit={handleSubmit}>
-                <input
-                  type="text"
-                  placeholder="DBQ Response"
-                  className="w-full p-4 border rounded-lg shadow-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+      {/* Floating blocks */}
+      {blocks.map((block, index) => (
+        <motion.div
+          key={index}
+          className={`absolute ${block.gradient} rounded-lg shadow-lg`}
+          style={{
+            top: `${block.top}px`,
+            left: `${block.left}px`,
+            width: `${block.size}px`,
+            height: `${block.size}px`,
+          }}
+          initial={{ scale: 0, opacity: 0, rotate: 0 }}
+          animate={{
+            scale: [0, 1, 1.1, 1],
+            opacity: [0, 0.3, 0.3, 0.05],
+            rotate: [0, 5, -5, 0],
+            y: [0, 10, -10, 0]
+          }}
+          transition={{ duration: 12, delay: block.delay, repeat: Infinity, repeatType: "reverse" }}
+        />
+      ))}
+
+      {/* Puzzle pieces */}
+      <div className="absolute w-full h-full max-w-5xl">
+        {showPieces && pieces.map((piece, idx) => (
+          <motion.div
+            key={piece.name}
+            className="absolute flex items-center justify-center backdrop-blur-md bg-white/30 rounded-lg shadow-2xl p-4"
+            style={piece.style}
+            initial={piece.initial}
+            animate={{ x: 0, y: 0, opacity: 1 }}
+            transition={{ duration: 0.3, delay: piece.delay, ease: "easeOut" }} // faster animation
+            onAnimationComplete={() => {
+              if (idx === pieces.length - 1) {
+                // trigger fade out after last piece finishes
+                setTimeout(() => setErasePieces(true), 50); 
+                setTimeout(() => {
+                  setShowPieces(false);
+                  setShowForm(true);
+                }, 250); // slightly longer to allow fade
+              }
+            }}
+            {...(erasePieces ? {
+              animate: { x: 0, y: 0, opacity: 0 }, // keep x/y fixed, only fade
+              transition: { duration: 1, ease: "easeIn" }
+            } : {})}
+          />
+        ))}
+
+        {/* Solid form with opposite diagonal wipe */}
+        {showForm && (
+          <div
+            className="absolute rounded-3xl shadow-2xl"
+            style={puzzleBounds} // shadow and exact position/size
+          >
+            <motion.div
+              className="w-full h-full flex flex-col items-center justify-center backdrop-blur-md bg-white/90 rounded-3xl p-8"
+              initial={{ clipPath: 'polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%)' }}
+              animate={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%)' }}
+              transition={{ duration: 0.7, ease: "easeInOut" }}
+              whileHover={{ y: [0, -5, 5, 0], transition: { yoyo: Infinity, duration: 3, ease: "easeInOut" } }}
+            >
+              <h1 className="text-5xl md:text-6xl font-serif font-bold bg-gradient-to-r from-yellow-500 to-purple-600 text-transparent bg-clip-text drop-shadow-lg mb-4 text-center">
+                Intelligrader
+              </h1>
+              <h2 className="text-lg md:text-xl font-medium text-gray-800 mb-6 text-center">
+                The APUSH DBQ Grader
+              </h2>
+              <form className="w-full flex flex-col gap-4" onSubmit={handleSubmit}>
+                <textarea
+                  rows={6}
+                  placeholder="Paste your DBQ response here..."
+                  className="w-full p-4 border rounded-xl shadow-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 resize-none"
+                  value={input}
                   onChange={(e) => setInput(e.target.value)}
                 />
                 <button
                   type="submit"
-                  className="px-6 py-3 text-lg font-semibold text-white bg-gradient-to-r from-blue-700 to-purple-600 rounded-lg shadow-lg transition transform hover:scale-110"
+                  className="px-6 py-3 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg hover:scale-105 transition-transform"
                 >
                   Grade Now
                 </button>
               </form>
-            </div>
+            </motion.div>
           </div>
-        <br></br>
-      </motion.main>
-
-      {/* Expanding Reptile Scale Design */}
-      <div className="absolute top-0 left-0 right-0 bottom-0 z-10 flex justify-center items-center"> {/* Absolute positioning and z-index */}
-        <div className="relative grid grid-cols-11 gap-2">
-          {scales.map((_, index) => {
-            const row = Math.floor(index / gridSize); // Row index
-            const col = index % gridSize; // Column index
-            const distance = Math.sqrt(
-              Math.pow(row - center, 2) + Math.pow(col - center, 2)
-            ); // Distance from center
-
-            return (
-              <motion.div
-                key={index}
-                className="absolute h-16 w-16 bg-gradient-to-br from-yellow-400 to-yellow-600" // Increased block size
-                style={{
-                  top: `${row * 60 - center * 60}px`, // Increased spacing
-                  left: `${col * 60 - center * 60}px`, // Increased spacing
-                }}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{
-                  scale: [0, 1, 1.1, 0],
-                  opacity: [0, 1, 1, 0],
-                }}
-                transition={{
-                  duration: 2,
-                  delay: distance * 0.05, // Delay based on distance
-                }}
-              ></motion.div>
-            );
-          })}
-        </div>
+        )}
       </div>
 
-      <div className="w-full bg-purple-700 text-white py-6 mt-auto z-20">
-          <footer className="text-center text-sm font-bold">
-              © 2025 Intelligrader. All rights reserved. | <a href="https://policies.google.com/privacy" className="text-blue-400 hover:underline">Privacy Policy</a> | <form action={handleTOS} className="text-blue-400 hover:underline"><input value={"Terms of Service"} type="submit"></input></form>
-          </footer>
-      </div>
+      {/* Modal */}
+      {isPopupOpen && (
+        <motion.div
+          className="fixed inset-0 z-30 flex items-center justify-center bg-black/50"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          <motion.div
+            className="bg-white rounded-2xl p-8 shadow-2xl max-w-sm w-full text-center"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="text-xl font-semibold mb-2 text-gray-800">Grading in progress...</h2>
+            <p className="text-gray-700">This may take a moment.</p>
+            <p className="text-gray-700 mt-2">Grab a cookie while you wait 🍪</p>
+            <button
+              className="mt-6 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              onClick={togglePopup}
+            >
+              Close
+            </button>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Footer */}
+      <footer className="w-full py-6 bg-purple-700 text-white z-20 text-center text-sm absolute bottom-0">
+        © 2025 Intelligrader. All rights reserved. | <a href="https://policies.google.com/privacy" className="text-blue-300 hover:underline">Privacy Policy</a> | <button onClick={handleTOS} className="text-blue-300 hover:underline">Terms of Service</button>
+      </footer>
     </div>
   );
 }
