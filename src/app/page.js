@@ -128,33 +128,99 @@ export default function Home() {
 
   return (
     <div className="relative flex items-center justify-center min-h-screen bg-gradient-to-br from-white to-purple-50 overflow-hidden">
-      {/* Mirror-like glassy edge across screen center */}
-      {activeBgEffect === 'reflective' && (
-        <div
-          className="absolute left-0 w-full z-[5] pointer-events-none"
+    {/* Heavy distortion band across screen center (Reflective only) */}
+    {activeBgEffect === 'reflective' && (
+      <div
+        className="fixed left-0 w-full z-[5] pointer-events-none"
+        style={{ top: '50%', transform: 'translateY(-50%)' }}
+      >
+        <motion.div
+          className="relative w-full h-[12vh]"
           style={{
-            top: `50%`,
-            height: '3px',
+            // Strong refraction + blur of content behind
+            filter: 'url(#mirrorDistort)',
+            backdropFilter: 'blur(14px) saturate(160%) contrast(120%)',
+            WebkitBackdropFilter: 'blur(14px) saturate(160%) contrast(120%)',
+            // Feather top & bottom edges of the band
+            maskImage:
+              'linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.95) 20%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0))',
+            WebkitMaskImage:
+              'linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.95) 20%, rgba(0,0,0,0.95) 80%, rgba(0,0,0,0))',
+            // A subtle internal sheen
             background:
-              'linear-gradient(to bottom, rgba(255,255,255,0.5), rgba(255,255,255,0.2), rgba(255,255,255,0.5))',
+              'linear-gradient(to bottom, rgba(255,255,255,0.10), rgba(255,255,255,0.02), rgba(255,255,255,0.10))',
             boxShadow:
-              '0 0 30px rgba(255,255,255,0.25), inset 0 0 8px rgba(255,255,255,0.25)',
-            backdropFilter: 'blur(6px) brightness(1.2)',
-            WebkitBackdropFilter: 'blur(6px) brightness(1.2)',
+              'inset 0 0 24px rgba(255,255,255,0.18), 0 0 60px rgba(255,255,255,0.10)',
+            transform: 'translateZ(0)', // avoid flicker
           }}
-        />
-      )}
+          animate={{ y: [0, -2, 0, 2, 0] }}
+          transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          {/* Top glint */}
+          <motion.div
+            className="absolute top-0 left-0 w-full h-[2px]"
+            style={{
+              background:
+                'linear-gradient(to right, transparent, rgba(255,255,255,0.9), transparent)',
+              opacity: 0.6,
+              filter: 'blur(0.5px)',
+            }}
+            animate={{ opacity: [0.25, 0.7, 0.25] }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          />
+          {/* Bottom glint */}
+          <motion.div
+            className="absolute bottom-0 left-0 w-full h-[2px]"
+            style={{
+              background:
+                'linear-gradient(to right, transparent, rgba(255,255,255,0.8), transparent)',
+              opacity: 0.55,
+              filter: 'blur(0.5px)',
+            }}
+            animate={{ opacity: [0.2, 0.65, 0.2] }}
+            transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </motion.div>
+      </div>
+    )}
 
-      {/* Hidden SVG filter for ripple (used on bottom reflections) */}
+      {/* Hidden SVG filters for Reflective mode */}
       {activeBgEffect === 'reflective' && (
         <svg className="absolute w-0 h-0">
           <defs>
+            {/* Existing mild ripple used on reflections */}
             <filter id="rippleFilter">
               <feTurbulence type="fractalNoise" baseFrequency="0.008" numOctaves="2" seed="2" result="noise">
                 <animate attributeName="baseFrequency" dur="6s" values="0.008;0.012;0.008" repeatCount="indefinite" />
               </feTurbulence>
               <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G">
                 <animate attributeName="scale" dur="6s" values="6;10;6" repeatCount="indefinite" />
+              </feDisplacementMap>
+            </filter>
+
+            {/* NEW: very strong distortion for the center mirror band */}
+            <filter
+              id="mirrorDistort"
+              x="-20%" y="-100%" width="140%" height="300%"
+              colorInterpolationFilters="sRGB"
+            >
+              <feTurbulence
+                type="fractalNoise"
+                baseFrequency="0.015"
+                numOctaves="2"
+                seed="8"
+                result="noise"
+              >
+                <animate attributeName="baseFrequency" dur="8s" values="0.005;0.02;0.005" repeatCount="indefinite" />
+              </feTurbulence>
+              <feDisplacementMap
+                in="SourceGraphic"
+                in2="noise"
+                scale="60"
+                xChannelSelector="R"
+                yChannelSelector="G"
+              >
+                <animate attributeName="scale" dur="8s" values="45;0;45" repeatCount="indefinite" />
               </feDisplacementMap>
             </filter>
           </defs>
