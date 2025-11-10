@@ -3,7 +3,6 @@
 import * as motion from "motion/react-client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from 'next/navigation';
-import { delay } from "framer-motion";
 
 // >>> Cookies helpers
 function setCookie(name, value, days = 30) {
