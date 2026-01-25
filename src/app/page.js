@@ -326,7 +326,7 @@ export default function Home() {
                 filter: "blur(2px) brightness(1.15) contrast(1.2)",
                 maskImage: "linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0))",
                 WebkitMaskImage:
-                  "linear-gradient(to bottom, rgba(0,0,0,1), rgba(0,0,0,0))",
+                  "linear-gradient(to bottom, rgba(0,0,1,1), rgba(0,0,0,0))",
                 mixBlendMode: "lighten",
               }}
               initial={blockInitial}
